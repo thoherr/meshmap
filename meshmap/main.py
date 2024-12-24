@@ -9,9 +9,9 @@ def get_node(node_list, node_id):
             return node
     return None
 
-def node_tooltip(node):
-    name = "{longName} ({shortName})".format(longName=node.longName, shortName=node.shortName)
-    battery = " {batteryLevel}%".format(batteryLevel=node.batteryLevel) if node.batteryLevel else ""
+def node_tooltip(n):
+    name = "{longName} ({shortName})".format(longName=n.longName, shortName=n.shortName)
+    battery = " {batteryLevel}%".format(batteryLevel=n.batteryLevel) if n.batteryLevel else ""
     return name + battery
 
 data_folder = 'data'
@@ -41,6 +41,6 @@ for node in nodes:
                        icon=folium.Icon(icon='info-sign')).
          add_to(meshmap))
 
-map_file_name = "meshmap.{short_name}.html".format(short_name=my_node.shortName)
+map_file_name = "meshmap.{id}.html".format(id=my_node.id)
 map_file = os.path.join(output_folder, map_file_name)
 meshmap.save(map_file)

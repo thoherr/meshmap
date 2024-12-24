@@ -38,7 +38,8 @@ def get_node(node_list, node_id):
 def node_tooltip(n):
     name = "{longName} ({shortName})".format(longName=n.longName, shortName=n.shortName)
     battery = " {batteryLevel}%".format(batteryLevel=n.batteryLevel) if n.batteryLevel else ""
-    return name + battery
+    lastHeard = "<br/>{lastHeard}".format(lastHeard=datetime.datetime.fromtimestamp(int(n.lastHeard / 1000)))
+    return name + battery + lastHeard
 
 
 def node_location(node):

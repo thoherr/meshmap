@@ -5,27 +5,16 @@ import folium
 import datetime
 
 now_in_seconds = int(datetime.datetime.now().timestamp())
-fadeout_interval = datetime.timedelta(hours=18).total_seconds()
-traceroute_interval = datetime.timedelta(hours=18).total_seconds()
+fadeout_interval_seconds = datetime.timedelta(hours=18).total_seconds()
+traceroute_interval_seconds = datetime.timedelta(hours=18).total_seconds()
+age_thresholds_percent_of_interval = [0, 30, 50, 65, 80, 90, 100]
 
 
 def age_group(timestamp, interval):
     value = int(100 * (interval - int(now_in_seconds - timestamp / 1000)) / interval)
-    if value > 90:
-        group = 6
-    elif value > 80:
-        group = 5
-    elif value > 65:
-        group = 4
-    elif value > 50:
-        group = 3
-    elif value > 30:
-        group = 2
-    elif value > 0:
-        group = 1
-    else:
-        group = 0
-    return group
+    for i, t in enumerate(age_thresholds_percent_of_interval):
+        if value <= t:
+            return i
 
 
 def age_color(timestamp, interval):
@@ -55,7 +44,7 @@ def add_node_to_map(mymap, node):
     if node.lat and node.lon:
         (folium.Marker(location=node_location(node),
                        tooltip=node_tooltip(node),
-                       icon=folium.Icon(icon='info-sign', color=age_color(node.lastHeard, fadeout_interval))).
+                       icon=folium.Icon(icon='info-sign', color=age_color(node.lastHeard, fadeout_interval_seconds))).
          add_to(mymap))
 
 
@@ -72,7 +61,7 @@ def add_route_to_map(mymap, nodes, color, route):
 
 def add_routes_to_map(mymap, nodes, traceroutes):
     for traceroute in traceroutes:
-        color = age_color(traceroute.timeStamp, traceroute_interval)
+        color = age_color(traceroute.timeStamp, traceroute_interval_seconds)
         add_route_to_map(mymap, nodes, color, traceroute.nodeTraceTo)
         add_route_to_map(mymap, nodes, color, traceroute.nodeTraceFrom)
 

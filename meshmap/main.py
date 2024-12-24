@@ -9,23 +9,28 @@ fadeout_interval = datetime.timedelta(hours=18).total_seconds()
 traceroute_interval = datetime.timedelta(hours=18).total_seconds()
 
 
-def age_color(timestamp, interval):
-    opacity = int(100 * (interval - int(now_in_seconds - timestamp / 1000)) / interval)
-    if opacity > 90:
-        color = 'black'
-    elif opacity > 80:
-        color = 'gray'
-    elif opacity > 65:
-        color = 'cadetblue'
-    elif opacity > 50:
-        color = 'lightgray'
-    elif opacity > 30:
-        color = 'darkblue'
-    elif opacity > 0:
-        color = 'blue'
+def age_group(timestamp, interval):
+    value = int(100 * (interval - int(now_in_seconds - timestamp / 1000)) / interval)
+    if value > 90:
+        group = 6
+    elif value > 80:
+        group = 5
+    elif value > 65:
+        group = 4
+    elif value > 50:
+        group = 3
+    elif value > 30:
+        group = 2
+    elif value > 0:
+        group = 1
     else:
-        return 'lightblue'
-    return color
+        group = 0
+    return group
+
+
+def age_color(timestamp, interval):
+    return ['lightblue', 'blue', 'darkblue',
+            'lightgray', 'cadetblue', 'gray', 'black'][age_group(timestamp, interval)]
 
 
 def get_node(node_list, node_id):

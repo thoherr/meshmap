@@ -5,16 +5,17 @@ import folium
 import datetime
 
 now_in_seconds = int(datetime.datetime.now().timestamp())
-fadeout = datetime.timedelta(hours=10).total_seconds()
+fadeout_interval = datetime.timedelta(hours=18).total_seconds()
+traceroute_interval = datetime.timedelta(hours=18).total_seconds()
 
 
-def age_color(timestamp):
-    opacity = int(100 * (fadeout - int(now_in_seconds - timestamp / 1000)) / fadeout)
+def age_color(timestamp, interval):
+    opacity = int(100 * (interval - int(now_in_seconds - timestamp / 1000)) / interval)
     if opacity > 90:
         color = 'black'
     elif opacity > 80:
         color = 'gray'
-    elif opacity > 60:
+    elif opacity > 65:
         color = 'cadetblue'
     elif opacity > 50:
         color = 'lightgray'
@@ -25,7 +26,6 @@ def age_color(timestamp):
     else:
         return 'lightblue'
     return color
-
 
 
 def get_node(node_list, node_id):
@@ -41,11 +41,15 @@ def node_tooltip(n):
     return name + battery
 
 
+def node_location(node):
+    return [node.lat, node.lon]
+
+
 def add_node_to_map(mymap, node):
     if node.lat and node.lon:
-        (folium.Marker(location=[node.lat, node.lon],
+        (folium.Marker(location=node_location(node),
                        tooltip=node_tooltip(node),
-                       icon=folium.Icon(icon='info-sign', color=age_color(node.lastHeard))).
+                       icon=folium.Icon(icon='info-sign', color=age_color(node.lastHeard, fadeout_interval))).
          add_to(mymap))
 
 
@@ -54,10 +58,36 @@ def add_nodes_to_map(mymap, nodes):
         add_node_to_map(mymap, node)
 
 
-def get_links(meshdata):
+def add_route_to_map(mymap, nodes, color, route):
+    coords = [ c for c in list(map(lambda n: node_location(get_node(nodes, n)), route)) if c != [None, None] ]
+    tooltip = "{route}".format(route=route)
+    folium.PolyLine(coords, tooltip=tooltip, smooth_factor=0.5, color=color).add_to(mymap)
+
+
+def add_routes_to_map(mymap, nodes, traceroutes):
+    for traceroute in traceroutes:
+        color = age_color(traceroute.timeStamp, traceroute_interval)
+        add_route_to_map(mymap, nodes, color, traceroute.nodeTraceTo)
+        add_route_to_map(mymap, nodes, color, traceroute.nodeTraceFrom)
+
+
+def get_latest_trace(route):
+    timestamp = 0
+    latest_trace = None
+    for trace in route.traces:
+        if trace.timeStamp > timestamp:
+            latest_trace = trace
+            timestamp = latest_trace.timeStamp
+    return latest_trace
+
+
+def get_latest_traceroutes(meshdata):
+    traceroutes = []
     for route in meshdata.traceroutes:
-        pass  # TODO: Implement
-    return None
+        trace = get_latest_trace(route)
+        if trace:
+            traceroutes.append(trace)
+    return traceroutes
 
 
 data_folder = 'data'
@@ -82,7 +112,8 @@ meshmap = folium.Map(location=[my_node.lat, my_node.lon], zoom_start=12)
 
 add_nodes_to_map(meshmap, known_nodes)
 
-links = get_links(mesh_data)
+traceroutes = get_latest_traceroutes(mesh_data)
+add_routes_to_map(meshmap, known_nodes, traceroutes)
 
 map_file_name = "meshmap.{id}.html".format(id=my_node.id)
 map_file = os.path.join(output_folder, map_file_name)

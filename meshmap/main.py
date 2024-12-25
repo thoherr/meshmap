@@ -53,17 +53,17 @@ def add_nodes_to_map(mymap, nodes):
         add_node_to_map(mymap, node)
 
 
-def add_route_to_map(mymap, nodes, color, route):
+def add_route_to_map(mymap, nodes, timestamp, route):
     coords = [ c for c in list(map(lambda n: node_location(get_node(nodes, n)), route)) if c != [None, None] ]
-    tooltip = "{route}".format(route=route)
+    color = age_color(timestamp, traceroute_interval_seconds)
+    tooltip = "{route}<br/>{timestamp}".format(route=route, timestamp=datetime.datetime.fromtimestamp(int(timestamp / 1000)))
     folium.PolyLine(coords, tooltip=tooltip, smooth_factor=0.5, color=color).add_to(mymap)
 
 
 def add_routes_to_map(mymap, nodes, traceroutes):
     for traceroute in traceroutes:
-        color = age_color(traceroute.timeStamp, traceroute_interval_seconds)
-        add_route_to_map(mymap, nodes, color, traceroute.nodeTraceTo)
-        add_route_to_map(mymap, nodes, color, traceroute.nodeTraceFrom)
+        add_route_to_map(mymap, nodes, traceroute.timeStamp, traceroute.nodeTraceTo)
+        add_route_to_map(mymap, nodes, traceroute.timeStamp, traceroute.nodeTraceFrom)
 
 
 def get_latest_trace(route):
